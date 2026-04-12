@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<!-- saved from url=(0064)file:///C:/Users/bensa/Downloads/chen_insurance_dashboard_8.html -->
+<html lang="he" dir="rtl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>מערכת פגישות ביטוח — חן</title>
+<link href="./index_files/css2" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0f2044;--navy-mid:#1a3a6b;--navy-light:#dde6f7;--navy-xlight:#f0f4fc;
+  --teal:#0a7a68;--teal-light:#e2f5f1;--teal-mid:#9dd9ce;
+  --amber:#b85800;--amber-light:#fff4e6;--amber-mid:#ffc680;
+  --green:#246b31;--green-light:#e8f5eb;--green-mid:#9fd4aa;
+  --red:#a82626;--red-light:#fdf0f0;--red-mid:#f0b8b8;
+  --g50:#f9f9f7;--g100:#f2f2f0;--g150:#eaeae7;--g200:#ddddd9;--g300:#c4c4be;
+  --g400:#a8a8a2;--g500:#838380;--g600:#636360;--g700:#424240;--g900:#191917;
+  --font:'Heebo',system-ui,sans-serif;
+  --r-sm:6px;--r-md:10px;--r-lg:14px;--r-xl:18px;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font);background:var(--g100);color:var(--g900);font-size:14px;line-height:1.5}
+.app{display:grid;grid-template-columns:260px 1fr;height:100vh}
+
+/* ── SETUP SCREEN ── */
+#setup-screen{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:9999}
+.setup-box{background:white;border-radius:var(--r-xl);padding:32px;width:440px;box-shadow:0 24px 64px rgba(0,0,0,.3)}
+.setup-logo{width:44px;height:44px;background:var(--teal);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.setup-logo svg{width:22px;height:22px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round}
+.setup-box h2{font-size:20px;font-weight:700;color:var(--g900);margin-bottom:6px}
+.setup-box p{font-size:13px;color:var(--g500);margin-bottom:22px;line-height:1.6}
+.setup-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.setup-field label{font-size:11px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.05em}
+.setup-field input{padding:9px 11px;font-size:13px;font-family:var(--font);border:1px solid var(--g200);border-radius:var(--r-sm);background:var(--g50);color:var(--g900)}
+.setup-field input:focus{outline:none;border-color:var(--navy)}
+.setup-hint{font-size:11px;color:var(--g400);margin-top:2px}
+.setup-btn{width:100%;padding:11px;font-size:14px;font-weight:700;font-family:var(--font);border:none;border-radius:var(--r-md);background:var(--navy);color:white;cursor:pointer;margin-top:6px;transition:background .15s}
+.setup-btn:hover{background:var(--navy-mid)}
+.setup-err{font-size:12px;color:var(--red);margin-top:8px;display:none}
+.setup-steps{background:var(--g50);border-radius:var(--r-md);padding:12px 14px;margin-bottom:20px;border:1px solid var(--g200)}
+.setup-steps p{font-size:11.5px;color:var(--g600);line-height:1.9}
+.setup-steps a{color:var(--navy);font-weight:600}
+
+/* ── LOADING ── */
+#loading-screen{position:fixed;inset:0;background:white;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:9998}
+.spinner{width:32px;height:32px;border:3px solid var(--g200);border-top-color:var(--teal);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading-screen p{font-size:13px;color:var(--g500)}
+
+/* ── SIDEBAR ── */
+.sidebar{background:var(--navy);display:flex;flex-direction:column;overflow:hidden}
+.brand{padding:14px 14px 12px;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:9px}
+.brand-logo{width:32px;height:32px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.brand-logo svg{width:17px;height:17px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round}
+.brand-text{line-height:1.25;flex:1}
+.brand-name{font-size:13px;font-weight:700;color:white}
+.brand-sub{font-size:9px;color:rgba(255,255,255,.32);font-weight:300;text-transform:uppercase;letter-spacing:.05em}
+.sync-ind{font-size:10px;font-weight:600;display:flex;align-items:center;gap:4px;transition:opacity .3s;opacity:0}
+.sync-ind.saving{opacity:1;color:#5de0d0}
+.sync-ind.saved{opacity:1;color:#5de0d0}
+.sync-ind.error{opacity:1;color:#f0b8b8}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.sb-search{padding:8px 10px 6px}
+.sb-search input{width:100%;padding:7px 10px;font-size:12px;font-family:var(--font);border:1px solid rgba(255,255,255,.1);border-radius:var(--r-sm);background:rgba(255,255,255,.07);color:white;transition:border-color .15s}
+.sb-search input::placeholder{color:rgba(255,255,255,.25)}
+.sb-search input:focus{outline:none;border-color:rgba(255,255,255,.28)}
+.sb-lbl{padding:6px 13px 2px;font-size:9px;font-weight:700;color:rgba(255,255,255,.22);text-transform:uppercase;letter-spacing:.1em}
+.clist{flex:1;overflow-y:auto;padding:2px 8px}
+.clist::-webkit-scrollbar{width:3px}
+.clist::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+.ci{padding:7px 9px;border-radius:var(--r-sm);cursor:pointer;margin-bottom:2px;border:1px solid transparent;transition:background .14s;display:flex;align-items:center;gap:8px}
+.ci:hover{background:rgba(255,255,255,.07)}
+.ci.active{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.15)}
+.av-sm{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0}
+.ci-name{font-size:12.5px;font-weight:500;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci-meta{font-size:10px;color:rgba(255,255,255,.33);margin-top:1px}
+.sb-bottom{padding:8px;display:flex;flex-direction:column;gap:5px;border-top:1px solid rgba(255,255,255,.07)}
+.add-btn{padding:9px 12px;font-size:12px;font-family:var(--font);border:1px dashed rgba(255,255,255,.18);border-radius:var(--r-sm);background:transparent;color:rgba(255,255,255,.42);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s;width:100%}
+.add-btn:hover{border-color:rgba(255,255,255,.38);color:white}
+.add-btn svg,.settings-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.settings-btn{padding:7px 12px;font-size:11px;font-family:var(--font);border:1px solid rgba(255,255,255,.1);border-radius:var(--r-sm);background:transparent;color:rgba(255,255,255,.35);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .2s;width:100%}
+.settings-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.7)}
+
+/* ── MAIN ── */
+.main{display:flex;flex-direction:column;overflow:hidden;background:white}
+.topbar{padding:0 22px;border-bottom:1px solid var(--g200);display:flex;align-items:center;gap:12px;background:white;flex-shrink:0;height:62px}
+.av-lg{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:white;flex-shrink:0}
+.tb-info{flex:1}
+.tb-name{font-size:16px;font-weight:700;color:var(--g900)}
+.tb-sub{font-size:11px;color:var(--g500);margin-top:1px}
+.tb-end{display:flex;align-items:center;gap:10px;margin-right:auto}
+.live-tag{font-size:11px;padding:4px 11px;border-radius:99px;background:var(--teal-light);color:var(--teal);font-weight:600;display:flex;align-items:center;gap:5px;border:1px solid var(--teal-mid)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);display:inline-block;animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.tb-edit-btn{padding:5px 11px;font-size:11px;font-weight:600;font-family:var(--font);border-radius:var(--r-sm);border:1px solid var(--g200);background:var(--g50);color:var(--g600);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.tb-edit-btn:hover{background:var(--navy);border-color:var(--navy);color:white}
+.tb-edit-btn svg,.tb-del-btn svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.tb-del-btn{padding:5px 11px;font-size:11px;font-weight:600;font-family:var(--font);border-radius:var(--r-sm);border:1px solid var(--red-mid);background:var(--red-light);color:var(--red);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px}
+.tb-del-btn:hover{background:var(--red);color:white}
+.circ-wrap{display:flex;align-items:center;gap:7px}
+.circ-lbl{font-size:10px;color:var(--g500);line-height:1.3;text-align:right}
+.circ-pct{font-size:18px;font-weight:700;color:var(--navy);display:block}
+
+/* ── CONTENT ── */
+.content{display:grid;grid-template-columns:1fr 270px;flex:1;overflow:hidden}
+.lp{padding:18px 20px;overflow-y:auto}
+.lp::-webkit-scrollbar{width:4px}
+.lp::-webkit-scrollbar-thumb{background:var(--g200);border-radius:2px}
+.rp{border-right:1px solid var(--g200);background:var(--g50);padding:14px;overflow-y:auto}
+.sec{font-size:9px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.1em;margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.sec::after{content:'';flex:1;height:1px;background:var(--g200)}
+.pgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:18px}
+.pc{background:white;border:1px solid var(--g200);border-radius:var(--r-md);padding:10px 12px;transition:border-color .15s}
+.pc:hover{border-color:var(--g300)}
+.pc.full{grid-column:1/-1}
+.pl{font-size:9px;color:var(--g500);font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
+.pv{font-size:13px;font-weight:500;color:var(--g900)}
+.chip{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;display:inline-flex;align-items:center;gap:3px}
+.chip-navy{background:var(--navy-light);color:var(--navy-mid);border:1px solid #b8cde8}
+.chip-teal{background:var(--teal-light);color:var(--teal);border:1px solid var(--teal-mid)}
+.pyramid{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.tier{border-radius:var(--r-md);overflow:hidden;border:1px solid}
+.t1{border-color:#f8ae80}.t2{border-color:#a8b6f8}.t3{border-color:#5de0d0}
+.tier-hdr{display:flex;align-items:center;gap:9px;padding:10px 13px;cursor:pointer;user-select:none}
+.tier-hdr:hover{filter:brightness(.97)}
+.t1 .tier-hdr{background:linear-gradient(to left,#fff5ef,#fef0e5)}
+.t2 .tier-hdr{background:linear-gradient(to left,#f1f1ff,#edeffd)}
+.t3 .tier-hdr{background:linear-gradient(to left,#edfaf7,#e5f8f3)}
+.tn{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0}
+.t1 .tn{background:#f07020;color:white}
+.t2 .tn{background:#5b5fe8;color:white}
+.t3 .tn{background:#0a9484;color:white}
+.tl{flex:1;font-size:13px;font-weight:700;color:var(--g900)}
+.tbadge{font-size:10px;padding:2px 9px;border-radius:99px;font-weight:700}
+.tbadge.done{background:var(--green-light);color:var(--green);border:1px solid var(--green-mid)}
+.tbadge.part{background:var(--amber-light);color:var(--amber);border:1px solid var(--amber-mid)}
+.tbadge.todo{background:var(--g100);color:var(--g400);border:1px solid var(--g200)}
+.tbadge.active{background:var(--navy-light);color:var(--navy-mid);border:1px solid #b8cde8}
+.chev{font-size:9px;color:var(--g400);transition:transform .2s}
+.chev.open{transform:rotate(180deg)}
+.tier-body{padding:7px 11px 11px;background:white;display:flex;flex-direction:column;gap:4px}
+@keyframes slideIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.slide{animation:slideIn .18s ease}
+.trow{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r-sm);background:var(--g50);border:1px solid var(--g200);transition:border-color .12s}
+.trow:hover{border-color:var(--g300);background:white}
+.tname{flex:1;font-size:12.5px;color:var(--g700)}
+.stbts{display:flex;gap:3px}
+.stb{font-size:11px;padding:3px 9px;border-radius:99px;border:1px solid var(--g300);background:white;color:var(--g500);cursor:pointer;font-family:var(--font);font-weight:600;transition:all .12s;white-space:nowrap}
+.stb:hover{border-color:var(--g500);color:var(--g900)}
+.stb.y{background:var(--green-light);border-color:var(--green-mid);color:var(--green)}
+.stb.w{background:var(--amber-light);border-color:var(--amber-mid);color:var(--amber)}
+.stb.n{background:var(--red-light);border-color:var(--red-mid);color:var(--red)}
+.pbar{height:6px;border-radius:3px;background:var(--g200);overflow:hidden;margin-top:10px}
+.pfill{height:100%;border-radius:3px;background:linear-gradient(to left,var(--teal),#185fa5);transition:width .5s cubic-bezier(.4,0,.2,1)}
+.pmeta{display:flex;justify-content:space-between;margin-top:4px}
+.rcard{background:white;border:1px solid var(--g200);border-radius:var(--r-md);padding:11px 13px;margin-bottom:9px}
+.rcard-title{font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.field{width:100%;padding:7px 9px;font-size:12px;font-family:var(--font);border:1px solid var(--g200);border-radius:var(--r-sm);background:var(--g50);color:var(--g900);transition:border-color .15s}
+.field:focus{outline:none;border-color:var(--g400);background:white}
+textarea.field{min-height:72px;resize:vertical;margin-bottom:8px}
+.save-btn{padding:6px 14px;font-size:11.5px;font-weight:600;font-family:var(--font);border-radius:var(--r-sm);border:1px solid var(--g200);background:var(--g50);color:var(--g700);cursor:pointer;transition:all .15s}
+.save-btn:hover{background:var(--navy);border-color:var(--navy);color:white}
+.note-item{padding:8px 10px;border-radius:var(--r-sm);background:var(--navy-xlight);border:1px solid var(--navy-light);margin-bottom:6px;position:relative}
+.note-text{font-size:12px;color:var(--g700);line-height:1.5;padding-left:20px}
+.note-time{font-size:9.5px;color:var(--g400);margin-top:2px}
+.note-del{position:absolute;left:8px;top:8px;background:none;border:none;cursor:pointer;color:var(--g400);font-size:14px;padding:0;line-height:1}
+.note-del:hover{color:var(--red)}
+.next-tag{display:flex;align-items:center;gap:6px;font-size:11px;padding:6px 10px;border-radius:var(--r-sm);background:var(--amber-light);border:1px solid var(--amber-mid);color:var(--amber);font-weight:600;margin-bottom:9px}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;gap:12px;color:var(--g400)}
+.empty svg{width:44px;height:44px;stroke:currentColor;fill:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+.empty p{font-size:13px}
+
+/* ── MODALS ── */
+.overlay{position:fixed;inset:0;background:rgba(15,32,68,.55);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(3px)}
+.modal{background:white;border-radius:var(--r-xl);padding:22px;width:420px;max-height:92vh;overflow-y:auto;box-shadow:0 16px 48px rgba(0,0,0,.22)}
+.modal.wide{width:560px}
+.modal h3{font-size:16px;font-weight:700;color:var(--g900);margin-bottom:4px}
+.modal-sub{font-size:11px;color:var(--g400);margin-bottom:16px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.frow{display:flex;flex-direction:column;gap:4px}
+.frow label{font-size:10.5px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.04em}
+.frow input,.frow select{padding:7px 9px;font-size:13px;font-family:var(--font);border:1px solid var(--g200);border-radius:var(--r-sm);background:var(--g50);color:var(--g900);transition:border-color .15s}
+.frow input:focus,.frow select:focus{outline:none;border-color:var(--g500);background:white}
+.frow.full{grid-column:1/-1}
+.mbtns{display:flex;gap:8px;margin-top:18px}
+.mbtn-p{flex:1;padding:9px;font-size:13px;font-weight:700;font-family:var(--font);border-radius:var(--r-sm);border:none;background:var(--navy);color:white;cursor:pointer;transition:background .15s}
+.mbtn-p:hover:not(:disabled){background:var(--navy-mid)}
+.mbtn-p:disabled{opacity:.5;cursor:not-allowed}
+.mbtn-s{flex:1;padding:9px;font-size:13px;font-weight:500;font-family:var(--font);border-radius:var(--r-sm);border:1px solid var(--g200);background:white;color:var(--g700);cursor:pointer}
+.mbtn-s:hover{background:var(--g50)}
+.mort-row{display:none}
+.mort-row.show{display:flex;flex-direction:column;gap:4px}
+.stabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--g200)}
+.stab{padding:8px 14px;font-size:12px;font-weight:600;font-family:var(--font);border:none;background:none;cursor:pointer;color:var(--g500);border-bottom:2px solid transparent;margin-bottom:-1px}
+.stab.active{color:var(--navy);border-bottom-color:var(--navy)}
+.stab-content{display:none}
+.stab-content.active{display:block}
+.slist{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.slist-item{display:flex;align-items:center;gap:7px;padding:7px 10px;background:var(--g50);border:1px solid var(--g200);border-radius:var(--r-sm)}
+.slist-item input{flex:1;border:none;background:none;font-family:var(--font);font-size:13px;color:var(--g900)}
+.slist-item input:focus{outline:none}
+.slist-del{background:none;border:none;cursor:pointer;color:var(--g400);font-size:15px;padding:0 2px}
+.slist-del:hover{color:var(--red)}
+.add-item-row{display:flex;gap:6px}
+.add-item-row input{flex:1;padding:7px 9px;font-size:12px;font-family:var(--font);border:1px solid var(--g200);border-radius:var(--r-sm);background:var(--g50);color:var(--g900)}
+.add-item-row input:focus{outline:none;border-color:var(--g400)}
+.add-item-row button{padding:7px 12px;font-size:12px;font-weight:600;font-family:var(--font);border-radius:var(--r-sm);border:1px solid var(--navy-light);background:var(--navy-light);color:var(--navy-mid);cursor:pointer}
+.add-item-row button:hover{background:var(--navy);color:white;border-color:var(--navy)}
+.ssec{font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.07em;margin:14px 0 7px}
+.tier-edit-block{background:var(--g50);border:1px solid var(--g200);border-radius:var(--r-md);padding:11px 13px;margin-bottom:8px}
+.tier-edit-title{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.tier-edit-title input{flex:1;padding:5px 8px;font-size:13px;font-weight:600;font-family:var(--font);border:1px solid var(--g200);border-radius:var(--r-sm);background:white;color:var(--g900)}
+.tier-edit-title input:focus{outline:none;border-color:var(--g400)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--g900);color:white;font-size:12px;font-weight:500;padding:9px 18px;border-radius:99px;opacity:0;transition:opacity .25s;z-index:999;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen" style="display: none;">
+  <div class="setup-box">
+    <div class="setup-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7L12 2z"></path></svg>
+    </div>
+    <h2>חיבור למסד הנתונים</h2>
+    <p>הזיני את פרטי ה-Supabase שלך. הפרטים נשמרים רק בדפדפן שלך ולא נשלחים לשום מקום אחר.</p>
+    <div class="setup-steps">
+      <p>
+        1. כנסי ל־<a href="https://supabase.com/" target="_blank">supabase.com</a> → פרויקט שלך<br>
+        2. לכי ל־ <strong>Settings → API</strong><br>
+        3. העתיקי את <strong>Project URL</strong> ואת <strong>anon public key</strong>
+      </p>
+    </div>
+    <div class="setup-field">
+      <label>Project URL</label>
+      <input id="sb-url" placeholder="https://xxxxxxxxxxxx.supabase.co" autocomplete="off">
+    </div>
+    <div class="setup-field">
+      <label>Anon Public Key</label>
+      <input id="sb-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off">
+      <span class="setup-hint">זה המפתח הציבורי בלבד — בטוח לשמור בדפדפן</span>
+    </div>
+    <div id="setup-err" class="setup-err">לא הצלחנו להתחבר. בדקי שה-URL והמפתח נכונים.</div>
+    <button class="setup-btn" onclick="connectSupabase()">התחברות ←</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading-screen" style="display: none; flex-direction: column;">
+  <div class="spinner"></div>
+  <p>טוענת נתונים...</p>
+</div>
+
+<!-- CLIENT MODAL -->
+<div class="overlay" id="mo" style="display:none">
+  <div class="modal">
+    <h3 id="mo-title">הוספת לקוח חדש</h3>
+    <div class="modal-sub" id="mo-sub">מלא את הפרטים — ניתן לערוך בכל עת</div>
+    <div class="fgrid">
+      <div class="frow"><label>שם פרטי</label><input id="f-fn" placeholder="ישראל"></div>
+      <div class="frow"><label>שם משפחה</label><input id="f-ln" placeholder="ישראלי"></div>
+      <div class="frow"><label>גיל</label><input id="f-age" type="number" min="18" max="99" placeholder="42"></div>
+      <div class="frow"><label>מקצוע</label><input id="f-job" placeholder="מנהל כספים"></div>
+      <div class="frow"><label>סטטוס משפחתי</label><select id="f-st"></select></div>
+      <div class="frow"><label>תעסוקה</label><select id="f-emp"></select></div>
+      <div class="frow full"><label>מעסיק / שם עסק</label><input id="f-er" placeholder="חברת ABC"></div>
+      <div class="frow"><label>הכנסה חודשית ברוטו (₪)</label><input id="f-inc" type="number" placeholder="18000"></div>
+      <div class="frow"><label>מצב בריאות</label><select id="f-health"></select></div>
+      <div class="frow full"><label>ילדים — גילאים מופרדים בפסיק</label><input id="f-ch" placeholder="3, 7, 12"></div>
+      <div class="frow"><label>משכנתא?</label>
+        <select id="f-mort" onchange="togMort(this.value)"><option value="לא">לא</option><option value="כן">כן</option></select>
+      </div>
+      <div class="frow mort-row" id="mort-row"><label>יתרת משכנתא (₪)</label><input id="f-ma" type="number" placeholder="600000"></div>
+      <div class="frow"><label>כלי רכב</label><select id="f-cars"></select></div>
+    </div>
+    <div class="mbtns">
+      <button class="mbtn-s" onclick="closeModal()">ביטול</button>
+      <button class="mbtn-p" id="mo-save-btn" onclick="saveClient()">שמור לקוח</button>
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="overlay" id="settings-mo" style="display:none">
+  <div class="modal wide">
+    <h3>הגדרות מערכת</h3>
+    <div class="modal-sub">ערוך רשימות, קטגוריות ונושאי פגישה</div>
+    <div class="stabs">
+      <button class="stab active" onclick="switchTab(&#39;opts&#39;)">אפשרויות טפסים</button>
+      <button class="stab" onclick="switchTab(&#39;topics&#39;)">נושאי פגישה</button>
+    </div>
+    <div class="stab-content active" id="stab-opts">
+      <div class="ssec">סטטוס משפחתי</div>
+      <div class="slist" id="sl-marital"></div>
+      <div class="add-item-row"><input id="new-marital" placeholder="הוסף..." onkeydown="if(event.key===&#39;Enter&#39;)addListItem(&#39;marital&#39;)"><button onclick="addListItem(&#39;marital&#39;)">+ הוסף</button></div>
+      <div class="ssec">תעסוקה</div>
+      <div class="slist" id="sl-emp"></div>
+      <div class="add-item-row"><input id="new-emp" placeholder="הוסף..." onkeydown="if(event.key===&#39;Enter&#39;)addListItem(&#39;emp&#39;)"><button onclick="addListItem(&#39;emp&#39;)">+ הוסף</button></div>
+      <div class="ssec">מצב בריאות</div>
+      <div class="slist" id="sl-health"></div>
+      <div class="add-item-row"><input id="new-health" placeholder="הוסף..." onkeydown="if(event.key===&#39;Enter&#39;)addListItem(&#39;health&#39;)"><button onclick="addListItem(&#39;health&#39;)">+ הוסף</button></div>
+      <div class="ssec">כלי רכב</div>
+      <div class="slist" id="sl-cars"></div>
+      <div class="add-item-row"><input id="new-cars" placeholder="הוסף..." onkeydown="if(event.key===&#39;Enter&#39;)addListItem(&#39;cars&#39;)"><button onclick="addListItem(&#39;cars&#39;)">+ הוסף</button></div>
+    </div>
+    <div class="stab-content" id="stab-topics">
+      <div id="topics-editor"></div>
+    </div>
+    <div class="mbtns">
+      <button class="mbtn-s" onclick="closeSettings()">ביטול</button>
+      <button class="mbtn-p" onclick="saveSettings()">שמור הגדרות</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- APP SHELL -->
+<div class="app" id="app-shell" style="display: grid;">
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">
+        <svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7L12 2z"></path></svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-name">ביטוח חן</div>
+        <div class="brand-sub">מערכת פגישות</div>
+      </div>
+      <div id="sync-ind" class="sync-ind">
+        <span class="sync-dot"></span>
+        <span id="sync-txt">שומר</span>
+      </div>
+    </div>
+    <div class="sb-search"><input placeholder="חיפוש לקוח..." oninput="filterC(this.value)"></div>
+    <div class="sb-lbl">לקוחות</div>
+    <div class="clist" id="clist"></div>
+    <div class="sb-bottom">
+      <button class="add-btn" onclick="openModal()">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        לקוח חדש
+      </button>
+      <button class="settings-btn" onclick="reconnect()" style="color:rgba(255,255,255,.3)">
+        <svg viewBox="0 0 24 24"><path d="M21 2v6h-6" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"></path><path d="M3 12a9 9 0 0115-6.7L21 8" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"></path><path d="M3 22v-6h6" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"></path><path d="M21 12a9 9 0 01-15 6.7L3 16" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"></path></svg>
+        שנה חיבור Supabase
+      </button>
+      <button class="settings-btn" onclick="openSettings()">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"></path></svg>
+        הגדרות מערכת
+      </button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="topbar" id="topbar"><div style="width:42px;height:42px;border-radius:50%;background:var(--g150)"></div>
+      <div class="tb-info"><div class="tb-name" style="color:var(--g400);font-weight:400;font-size:14px">בחר לקוח מהרשימה</div></div></div>
+    <div id="mc" style="flex:1;display:flex;flex-direction:column;overflow:hidden"><div class="empty"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.8-7 8-7s8 3 8 7"></path></svg><p>בחר לקוח כדי להתחיל פגישה</p></div></div>
+  </div>
+</div>
+
+<script>
+// ── DEFAULTS ──
+const DEFAULT_OPTS={
+  marital:['נשוי/נשואה','רווק/רווקה','גרוש/גרושה','אלמן/אלמנה'],
+  emp:['שכיר','עצמאי','פנסיונר','סטודנט'],
+  health:['','מגבלות קיימות','תחת טיפול רפואי'],
+  cars:['0','1','2','3']
+};
+const CARS_LABELS={'0':'ללא רכב','1':'רכב אחד','2':'שני רכבים','3':'שלושה ומעלה'};
+const DEFAULT_TOPICS=[
+  {id:'t1',n:'1',lbl:'ביטוחים ראשוניים',cls:'t1',items:[
+    {id:'health_ins',name:'ביטוח בריאות'},
+    {id:'life_ins',name:'ביטוח חיים'},
+    {id:'mort_ins',name:'ביטוח משכנתא'}
+  ]},
+  {id:'t2',n:'2',lbl:'חיסכון ופנסיה',cls:'t2',items:[
+    {id:'pension',name:'קרן פנסיה'},
+    {id:'ksh',name:'קרן השתלמות'},
+    {id:'gml',name:'קופת גמל להשקעה'}
+  ]},
+  {id:'t3',n:'3',lbl:'ביטוחים אלמנטריים',cls:'t3',items:[
+    {id:'home_ins',name:'ביטוח דירה'},
+    {id:'car_ins',name:'ביטוח רכב'}
+  ]}
+];
+
+// ── STATE ──
+let SB_URL='', SB_KEY='';
+let clients=[], TOPICS=JSON.parse(JSON.stringify(DEFAULT_TOPICS)), opts=JSON.parse(JSON.stringify(DEFAULT_OPTS));
+let aid=null, openT={t1:true,t2:false,t3:false}, fq='', editId=null, nid=100;
+const COLORS=['#1a3a6b','#0a7a68','#7b3fa8','#b85800','#1a6b3a','#a82626'];
+const col=id=>COLORS[((id||1)-1)%COLORS.length];
+const ini=c=>(c.fn[0]+c.ln[0]).toUpperCase();
+
+// ── SUPABASE FETCH HELPER ──
+async function sb(method, table, body, query=''){
+  const res=await fetch(`${SB_URL}/rest/v1/${table}${query}`,{
+    method,
+    headers:{
+      'apikey':SB_KEY,
+      'Authorization':`Bearer ${SB_KEY}`,
+      'Content-Type':'application/json',
+      'Prefer': method==='POST'?'return=representation':'return=representation'
+    },
+    body:body?JSON.stringify(body):undefined
+  });
+  if(!res.ok){const t=await res.text();throw new Error(t);}
+  const txt=await res.text();
+  return txt?JSON.parse(txt):null;
+}
+
+// ── CONNECT ──
+async function connectSupabase(){
+  const url=document.getElementById('sb-url').value.trim().replace(/\/$/,'');
+  const key=document.getElementById('sb-key').value.trim();
+  if(!url||!key){showSetupErr('נא למלא את כל השדות');return;}
+  const btn=document.querySelector('.setup-btn');
+  btn.textContent='מתחבר...';btn.disabled=true;
+  document.getElementById('setup-err').style.display='none';
+  SB_URL=url;SB_KEY=key;
+  try{
+    // test connection
+    await sb('GET','clients','','?limit=1');
+    localStorage.setItem('sb_url',url);
+    localStorage.setItem('sb_key',key);
+    document.getElementById('setup-screen').style.display='none';
+    await loadAll();
+  }catch(e){
+    SB_URL='';SB_KEY='';
+    showSetupErr('לא הצלחנו להתחבר. בדקי שה-URL והמפתח נכונים.');
+    btn.textContent='התחברות ←';btn.disabled=false;
+  }
+}
+function showSetupErr(msg){
+  const el=document.getElementById('setup-err');
+  el.textContent=msg;el.style.display='block';
+}
+
+// ── LOAD ALL DATA ──
+async function loadAll(){
+  const ls=document.getElementById('loading-screen');
+  ls.style.display='flex';
+  try{
+    // load clients
+    const rows=await sb('GET','clients','','?order=id.asc');
+    clients=(rows||[]).map(r=>({...r.data,_sid:r.id}));
+    // load settings
+    const sets=await sb('GET','settings','','');
+    const optsRow=(sets||[]).find(r=>r.key==='opts');
+    const topicsRow=(sets||[]).find(r=>r.key==='topics');
+    if(optsRow&&optsRow.value&&Object.keys(optsRow.value).length) opts=optsRow.value;
+    if(topicsRow&&Array.isArray(topicsRow.value)&&topicsRow.value.length) TOPICS=topicsRow.value;
+    // compute nid
+    if(clients.length) nid=Math.max(...clients.map(c=>c.id||0))+1;
+    ls.style.display='none';
+    document.getElementById('app-shell').style.display='grid';
+    renderSb();renderMain();
+  }catch(e){
+    ls.style.display='none';
+    toast('שגיאה בטעינת נתונים: '+e.message);
+    document.getElementById('app-shell').style.display='grid';
+  }
+}
+
+// ── SYNC ──
+let syncTimer;
+function setSyncing(state,msg){
+  const ind=document.getElementById('sync-ind');
+  const txt=document.getElementById('sync-txt');
+  ind.className='sync-ind '+state;
+  txt.textContent=msg;
+  if(state==='saved'){
+    clearTimeout(syncTimer);
+    syncTimer=setTimeout(()=>{ind.className='sync-ind';},2500);
+  }
+}
+
+async function syncClient(c){
+  setSyncing('saving','שומר...');
+  try{
+    const {_sid,...data}=c;
+    if(_sid){
+      await sb('PATCH','clients',{data},`?id=eq.${_sid}`);
+    }else{
+      const res=await sb('POST','clients',[{data}],'');
+      if(res&&res[0]) c._sid=res[0].id;
+    }
+    setSyncing('saved','נשמר ✓');
+  }catch(e){
+    setSyncing('error','שגיאת שמירה');
+    toast('שגיאת שמירה: '+e.message);
+  }
+}
+
+async function deleteClientFromDB(sid){
+  try{await sb('DELETE','clients','',`?id=eq.${sid}`);}
+  catch(e){toast('שגיאת מחיקה');}
+}
+
+async function syncSettings(){
+  setSyncing('saving','שומר...');
+  try{
+    await sb('PATCH','settings',{value:opts},'?key=eq.opts');
+    await sb('PATCH','settings',{value:TOPICS},'?key=eq.topics');
+    setSyncing('saved','נשמר ✓');
+  }catch(e){
+    setSyncing('error','שגיאת שמירה');
+  }
+}
+
+// ── RENDER SIDEBAR ──
+function renderSb(){
+  const q=fq.toLowerCase();
+  document.getElementById('clist').innerHTML=clients
+    .filter(c=>(c.fn+' '+c.ln).toLowerCase().includes(q))
+    .map(c=>`<div class="ci${c.id===aid?' active':''}" onclick="sel(${c.id})">
+      <div class="av-sm" style="background:${col(c.id)}">${ini(c)}</div>
+      <div style="overflow:hidden"><div class="ci-name">${c.fn} ${c.ln}</div><div class="ci-meta">${c.age} · ${c.st}</div></div>
+    </div>`).join('');
+}
+function sel(id){aid=id;renderSb();renderMain();}
+function filterC(q){fq=q;renderSb();}
+
+// ── PROGRESS ──
+function prog(c){
+  const all=TOPICS.flatMap(t=>t.items);
+  const done=all.filter(i=>c.checks[i.id]==='yes'||c.checks[i.id]==='n').length;
+  return Math.round(done/all.length*100);
+}
+function badge(c,tier){
+  const d2=tier.items.filter(i=>c.checks[i.id]==='yes'||c.checks[i.id]==='n').length;
+  const tot=tier.items.length;
+  if(d2===tot) return`<span class="tbadge done">הושלם</span>`;
+  if(d2>0) return`<span class="tbadge part">${d2}/${tot}</span>`;
+  if(aid===c.id&&openT[tier.id]) return`<span class="tbadge active">בטיפול</span>`;
+  return`<span class="tbadge todo">ממתין</span>`;
+}
+
+// ── RENDER MAIN ──
+function renderMain(){
+  const c=clients.find(x=>x.id===aid);
+  const tb=document.getElementById('topbar'),mc=document.getElementById('mc');
+  if(!c){
+    tb.innerHTML=`<div style="width:42px;height:42px;border-radius:50%;background:var(--g150)"></div>
+      <div class="tb-info"><div class="tb-name" style="color:var(--g400);font-weight:400;font-size:14px">בחר לקוח מהרשימה</div></div>`;
+    mc.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.8-7 8-7s8 3 8 7"/></svg><p>בחר לקוח כדי להתחיל פגישה</p></div>`;
+    return;
+  }
+  const p=prog(c),r=2*Math.PI*15;
+  const today=new Date().toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'});
+  tb.innerHTML=`
+    <div class="av-lg" style="background:${col(c.id)}">${ini(c)}</div>
+    <div class="tb-info">
+      <div class="tb-name">${c.fn} ${c.ln}</div>
+      <div class="tb-sub">${c.age} שנים · ${c.job} · ${c.st} · ${c.emp}</div>
+    </div>
+    <div class="tb-end">
+      <div class="live-tag"><span class="live-dot"></span>פגישה פעילה · ${today}</div>
+      <button class="tb-edit-btn" onclick="openEditModal(${c.id})">
+        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        ערוך
+      </button>
+      <button class="tb-del-btn" onclick="delClient(${c.id})">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+        מחק
+      </button>
+      <div class="circ-wrap">
+        <svg width="38" height="38" viewBox="0 0 38 38">
+          <circle cx="19" cy="19" r="15" fill="none" stroke="var(--g200)" stroke-width="3"/>
+          <circle cx="19" cy="19" r="15" fill="none" stroke="var(--teal)" stroke-width="3"
+            stroke-dasharray="${r.toFixed(1)}" stroke-dashoffset="${(r*(1-p/100)).toFixed(1)}"
+            stroke-linecap="round" transform="rotate(-90 19 19)"/>
+        </svg>
+        <div class="circ-lbl"><span class="circ-pct">${p}%</span>התקדמות</div>
+      </div>
+    </div>`;
+
+  const childStr=c.ch&&c.ch.length
+    ?c.ch.map(a=>`<span class="chip chip-navy">בן/בת ${a}</span>`).join(' ')
+    :`<span style="color:var(--g400);font-size:12px">ללא ילדים</span>`;
+  const mortStr=c.mort==='כן'&&c.ma?`כן · ₪${Number(c.ma).toLocaleString()}`:(c.mort||'לא');
+  const incStr=c.inc?`<span class="chip chip-teal">₪${Number(c.inc).toLocaleString()}</span>`:'—';
+  const healthStr=c.health||`<span style="color:var(--green);font-size:12px">תקין</span>`;
+  const carsLabel=CARS_LABELS[c.cars||'0']||c.cars||'—';
+
+  const tiers=TOPICS.map(tier=>`
+    <div class="tier ${tier.cls}">
+      <div class="tier-hdr" onclick="tog('${tier.id}')">
+        <div class="tn">${tier.n}</div>
+        <span class="tl">${tier.lbl}</span>
+        ${badge(c,tier)}
+        <span class="chev${openT[tier.id]?' open':''}">▼</span>
+      </div>
+      ${openT[tier.id]?`<div class="tier-body slide">${tier.items.map(item=>{
+        const st=(c.checks||{})[item.id]||'none';
+        return`<div class="trow">
+          <span class="tname">${item.name}</span>
+          <div class="stbts">
+            <button class="stb${st==='yes'?' y':''}" onclick="setC('${item.id}','yes')">✓ קיים</button>
+            <button class="stb${st==='w'?' w':''}" onclick="setC('${item.id}','w')">⚑ לבדוק</button>
+            <button class="stb${st==='n'?' n':''}" onclick="setC('${item.id}','n')">✕ אין</button>
+          </div>
+        </div>`}).join('')}</div>`:''}
+    </div>`).join('');
+
+  const notesHtml=(c.notes||[]).map((n,i)=>`
+    <div class="note-item">
+      <button class="note-del" onclick="delNote(${i})">×</button>
+      <div class="note-text">${n.text}</div>
+      <div class="note-time">${n.time}</div>
+    </div>`).join('');
+
+  mc.innerHTML=`<div class="content">
+    <div class="lp">
+      <div class="sec">פרטי לקוח</div>
+      <div class="pgrid">
+        <div class="pc"><div class="pl">גיל</div><div class="pv">${c.age}</div></div>
+        <div class="pc"><div class="pl">מקצוע</div><div class="pv">${c.job}</div></div>
+        <div class="pc"><div class="pl">תעסוקה</div><div class="pv">${c.emp}</div></div>
+        <div class="pc"><div class="pl">סטטוס משפחתי</div><div class="pv">${c.st}</div></div>
+        <div class="pc"><div class="pl">מעסיק / עסק</div><div class="pv">${c.er||'—'}</div></div>
+        <div class="pc"><div class="pl">הכנסה חודשית</div><div class="pv">${incStr}</div></div>
+        <div class="pc"><div class="pl">משכנתא</div><div class="pv">${mortStr}</div></div>
+        <div class="pc"><div class="pl">כלי רכב</div><div class="pv">${carsLabel}</div></div>
+        <div class="pc"><div class="pl">מצב בריאות</div><div class="pv">${healthStr}</div></div>
+        <div class="pc full"><div class="pl" style="margin-bottom:6px">ילדים (${(c.ch||[]).length})</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center">${childStr}</div>
+        </div>
+      </div>
+      <div class="sec">מהלך הפגישה</div>
+      <div class="pyramid">${tiers}</div>
+      <div class="pbar"><div class="pfill" style="width:${p}%"></div></div>
+      <div class="pmeta">
+        <span style="font-size:10px;color:var(--g500)">התקדמות הפגישה</span>
+        <span style="font-size:10px;font-weight:700;color:var(--navy)">${p}%</span>
+      </div>
+    </div>
+    <div class="rp">
+      ${c.next?`<div class="next-tag">📌 נשאר לפגישה הבאה: ${c.next}</div>`:''}
+      <div class="rcard">
+        <div class="rcard-title">פגישה הבאה / פתוח לטיפול</div>
+        <input class="field" placeholder="מה נשאר פתוח?" value="${c.next||''}" oninput="upNext(this.value)"/>
+      </div>
+      <div class="rcard">
+        <div class="rcard-title">הערות מהפגישה</div>
+        <textarea class="field" id="ni" placeholder="הוסף הערה..."></textarea>
+        <button class="save-btn" onclick="addNote()">שמור הערה</button>
+      </div>
+      ${notesHtml}
+    </div>
+  </div>`;
+}
+
+// ── ACTIONS ──
+function tog(id){openT[id]=!openT[id];renderMain();}
+
+let autoSaveTimer;
+function scheduleSync(c){
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer=setTimeout(()=>syncClient(c),800);
+}
+
+function setC(iid,st){
+  const c=clients.find(x=>x.id===aid);if(!c)return;
+  if(!c.checks)c.checks={};
+  c.checks[iid]=c.checks[iid]===st?'none':st;
+  renderMain();scheduleSync(c);
+}
+function addNote(){
+  const c=clients.find(x=>x.id===aid),ni=document.getElementById('ni');
+  if(!c||!ni.value.trim())return;
+  c.notes=c.notes||[];
+  const t=new Date().toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'});
+  c.notes.unshift({text:ni.value.trim(),time:t});
+  ni.value='';renderMain();scheduleSync(c);
+}
+function delNote(i){
+  const c=clients.find(x=>x.id===aid);if(!c)return;
+  c.notes.splice(i,1);renderMain();scheduleSync(c);
+}
+let nextTimer;
+function upNext(v){
+  const c=clients.find(x=>x.id===aid);if(!c)return;
+  c.next=v;
+  clearTimeout(nextTimer);
+  nextTimer=setTimeout(()=>syncClient(c),1200);
+}
+async function delClient(id){
+  if(!confirm('למחוק את הלקוח לצמיתות?'))return;
+  const c=clients.find(x=>x.id===id);
+  if(c&&c._sid) await deleteClientFromDB(c._sid);
+  clients=clients.filter(x=>x.id!==id);
+  if(aid===id)aid=null;
+  renderSb();renderMain();
+  toast('הלקוח נמחק');
+}
+
+// ── MODAL HELPERS ──
+function populateSelects(){
+  const bld=(sel,list,labelFn)=>{
+    const el=document.getElementById(sel);if(!el)return;
+    el.innerHTML=list.map(v=>`<option value="${v}">${labelFn?labelFn(v):v}</option>`).join('');
+  };
+  bld('f-st',opts.marital);
+  bld('f-emp',opts.emp);
+  bld('f-health',opts.health,v=>v||'ללא מגבלות');
+  bld('f-cars',opts.cars,v=>CARS_LABELS[v]||v);
+}
+function togMort(v){document.getElementById('mort-row').classList.toggle('show',v==='כן');}
+function closeModal(){document.getElementById('mo').style.display='none';editId=null;}
+
+function openModal(){
+  editId=null;
+  document.getElementById('mo-title').textContent='הוספת לקוח חדש';
+  document.getElementById('mo-sub').textContent='מלא את הפרטים — ניתן לערוך בכל עת';
+  document.getElementById('mo-save-btn').textContent='שמור לקוח';
+  populateSelects();
+  ['fn','ln','age','job','er','inc','ch','ma'].forEach(f=>{const e=document.getElementById('f-'+f);if(e)e.value='';});
+  document.getElementById('f-mort').value='לא';
+  document.getElementById('mort-row').classList.remove('show');
+  document.getElementById('mo').style.display='flex';
+}
+
+function openEditModal(id){
+  const c=clients.find(x=>x.id===id);if(!c)return;
+  editId=id;
+  document.getElementById('mo-title').textContent=`עריכת ${c.fn} ${c.ln}`;
+  document.getElementById('mo-sub').textContent='שינויים יסונכרנו אוטומטית עם Supabase';
+  document.getElementById('mo-save-btn').textContent='עדכן פרטים';
+  populateSelects();
+  document.getElementById('f-fn').value=c.fn;
+  document.getElementById('f-ln').value=c.ln;
+  document.getElementById('f-age').value=c.age;
+  document.getElementById('f-job').value=c.job;
+  document.getElementById('f-er').value=c.er||'';
+  document.getElementById('f-inc').value=c.inc||'';
+  document.getElementById('f-ch').value=(c.ch||[]).join(', ');
+  document.getElementById('f-st').value=c.st;
+  document.getElementById('f-emp').value=c.emp;
+  document.getElementById('f-health').value=c.health||'';
+  document.getElementById('f-mort').value=c.mort||'לא';
+  document.getElementById('f-ma').value=c.ma||'';
+  document.getElementById('f-cars').value=c.cars||'1';
+  if(c.mort==='כן') document.getElementById('mort-row').classList.add('show');
+  else document.getElementById('mort-row').classList.remove('show');
+  document.getElementById('mo').style.display='flex';
+}
+
+async function saveClient(){
+  const fn=document.getElementById('f-fn').value.trim(),ln=document.getElementById('f-ln').value.trim();
+  if(!fn||!ln){toast('חובה למלא שם פרטי ושם משפחה');return;}
+  const btn=document.getElementById('mo-save-btn');
+  btn.disabled=true;btn.textContent='שומר...';
+  const chStr=document.getElementById('f-ch').value.trim();
+  const ch=chStr?chStr.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)):[];
+  const data={fn,ln,age:parseInt(document.getElementById('f-age').value)||0,
+    job:document.getElementById('f-job').value.trim(),
+    st:document.getElementById('f-st').value,
+    emp:document.getElementById('f-emp').value,
+    er:document.getElementById('f-er').value.trim(),
+    inc:parseInt(document.getElementById('f-inc').value)||0,
+    health:document.getElementById('f-health').value,
+    ch,mort:document.getElementById('f-mort').value,
+    ma:parseInt(document.getElementById('f-ma').value)||0,
+    cars:document.getElementById('f-cars').value
+  };
+  if(editId){
+    const c=clients.find(x=>x.id===editId);
+    if(c){Object.assign(c,data);await syncClient(c);}
+    toast('פרטים עודכנו');
+  }else{
+    const newC={id:nid++,...data,checks:{},notes:[],next:''};
+    clients.unshift(newC);
+    aid=newC.id;
+    await syncClient(newC);
+    toast('לקוח נוסף');
+  }
+  closeModal();renderSb();renderMain();
+  btn.disabled=false;
+}
+
+// ── SETTINGS ──
+function openSettings(){renderSettingsLists();renderTopicsEditor();document.getElementById('settings-mo').style.display='flex';}
+function closeSettings(){document.getElementById('settings-mo').style.display='none';}
+function switchTab(t){
+  document.querySelectorAll('.stab').forEach((b,i)=>b.classList.toggle('active',['opts','topics'][i]===t));
+  document.querySelectorAll('.stab-content').forEach(el=>el.classList.remove('active'));
+  document.getElementById('stab-'+t).classList.add('active');
+}
+function renderSettingsLists(){
+  ['marital','emp','health','cars'].forEach(k=>{
+    const el=document.getElementById('sl-'+k);if(!el)return;
+    const lf=k==='health'?v=>v||'ללא מגבלות':k==='cars'?v=>CARS_LABELS[v]||v:null;
+    el.innerHTML=opts[k].map((v,i)=>`
+      <div class="slist-item">
+        <input value="${lf?lf(v):v}" data-key="${k}" data-idx="${i}" onchange="opts['${k}'][${i}]=this.value"/>
+        <button class="slist-del" onclick="removeListItem('${k}',${i})">×</button>
+      </div>`).join('');
+  });
+}
+function renderTopicsEditor(){
+  document.getElementById('topics-editor').innerHTML=TOPICS.map((tier,ti)=>`
+    <div class="tier-edit-block">
+      <div class="tier-edit-title">
+        <div class="tn" style="background:${ti===0?'#f07020':ti===1?'#5b5fe8':'#0a9484'};color:white">${tier.n}</div>
+        <input value="${tier.lbl}" onchange="TOPICS[${ti}].lbl=this.value"/>
+      </div>
+      <div class="slist">
+        ${tier.items.map((item,ii)=>`
+          <div class="slist-item">
+            <input value="${item.name}" onchange="TOPICS[${ti}].items[${ii}].name=this.value"/>
+            <button class="slist-del" onclick="TOPICS[${ti}].items.splice(${ii},1);renderTopicsEditor()">×</button>
+          </div>`).join('')}
+      </div>
+      <div class="add-item-row">
+        <input id="nt-${ti}" placeholder="הוסף נושא..." onkeydown="if(event.key==='Enter')addTopicItem(${ti})"/>
+        <button onclick="addTopicItem(${ti})">+ הוסף</button>
+      </div>
+    </div>`).join('');
+}
+function removeListItem(k,i){opts[k].splice(i,1);renderSettingsLists();}
+function addListItem(k){
+  const inp=document.getElementById('new-'+k);
+  const v=inp.value.trim();if(!v)return;
+  opts[k].push(v);inp.value='';renderSettingsLists();
+}
+function addTopicItem(ti){
+  const inp=document.getElementById('nt-'+ti);
+  const v=inp.value.trim();if(!v)return;
+  TOPICS[ti].items.push({id:'t'+ti+'_'+Date.now(),name:v});
+  inp.value='';renderTopicsEditor();
+}
+async function saveSettings(){
+  await syncSettings();
+  closeSettings();renderSb();renderMain();
+  toast('הגדרות נשמרו');
+}
+
+// ── TOAST ──
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ── INIT ──
+const savedUrl=localStorage.getItem('sb_url');
+const savedKey=localStorage.getItem('sb_key');
+if(savedUrl&&savedKey){
+  SB_URL=savedUrl;SB_KEY=savedKey;
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('loading-screen').style.display='flex';
+  loadAll().catch(()=>{
+    SB_URL='';SB_KEY='';
+    localStorage.removeItem('sb_url');
+    localStorage.removeItem('sb_key');
+    document.getElementById('loading-screen').style.display='none';
+    document.getElementById('setup-screen').style.display='flex';
+    document.getElementById('setup-err').style.display='block';
+    document.getElementById('setup-err').textContent='החיבור הקודם נכשל — נא להזין מחדש את הפרטים.';
+    document.getElementById('sb-url').value=savedUrl;
+  });
+}
+
+function reconnect(){
+  localStorage.removeItem('sb_url');
+  localStorage.removeItem('sb_key');
+  SB_URL='';SB_KEY='';
+  document.getElementById('sb-url').value='';
+  document.getElementById('sb-key').value='';
+  document.getElementById('setup-err').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+  document.getElementById('app-shell').style.display='none';
+}
+</script>
+
+
+</body></html>
