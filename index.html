@@ -251,10 +251,20 @@ textarea.field{min-height:72px;resize:vertical;margin-bottom:8px}
 .calc-field label{font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.04em}
 .calc-field input{padding:7px 9px;font-size:13px;font-family:var(--font);border:1px solid var(--teal-mid);border-radius:var(--r-sm);background:white;color:var(--g900);transition:border-color .15s}
 .calc-field input:focus{outline:none;border-color:var(--teal)}
-.calc-result{background:white;border:1px solid var(--teal-mid);border-radius:var(--r-md);padding:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center}
+.calc-result{background:white;border:1px solid var(--teal-mid);border-radius:var(--r-md);padding:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;margin-bottom:8px}
 .cr-lbl{font-size:10px;color:var(--g500);margin-bottom:3px;display:block}
 .cr-val{font-size:15px;font-weight:700;color:var(--navy);display:block}
 .cr-val.profit{color:var(--teal)}
+.calc-tax{border-radius:var(--r-md);overflow:hidden;border:1px solid var(--amber-mid)}
+.calc-tax-hdr{background:var(--amber-light);padding:7px 12px;font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.05em;display:flex;align-items:center;gap:5px}
+.calc-tax-hdr svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.calc-tax-body{background:white;display:grid;grid-template-columns:1fr 1fr;gap:0}
+.calc-tax-cell{padding:10px 14px;text-align:center}
+.calc-tax-cell:first-child{border-left:1px solid var(--amber-mid)}
+.calc-tax-lbl{font-size:10px;color:var(--g500);display:block;margin-bottom:3px}
+.calc-tax-val{font-size:17px;font-weight:800;display:block}
+.calc-tax-val.tax{color:var(--amber)}
+.calc-tax-val.net{color:var(--teal)}
 .calc-slider-wrap{margin-bottom:10px}
 .calc-slider-wrap label{font-size:10px;font-weight:700;color:var(--g500);text-transform:uppercase;letter-spacing:.04em;display:flex;justify-content:space-between;margin-bottom:4px}
 .calc-slider-wrap input[type=range]{width:100%;accent-color:var(--teal)}
@@ -888,10 +898,26 @@ function renderMain(){
             <input id="cc-years" type="number" placeholder="20" min="1" max="50" oninput="calcCompound()">
           </div>
         </div>
-        <div class="calc-result" id="calc-result-box">
+        <div class="calc-result">
           <div><span class="cr-lbl">סה"כ הושקע</span><span class="cr-val" id="cc-invested">—</span></div>
           <div><span class="cr-lbl">סכום סופי</span><span class="cr-val" id="cc-total">—</span></div>
-          <div><span class="cr-lbl">רווח נטו</span><span class="cr-val profit" id="cc-profit">—</span></div>
+          <div><span class="cr-lbl">רווח ברוטו</span><span class="cr-val profit" id="cc-profit">—</span></div>
+        </div>
+        <div class="calc-tax" id="cc-tax-box" style="display:none">
+          <div class="calc-tax-hdr">
+            <svg viewBox="0 0 24 24"><path d="M12 2L3 7v5c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7L12 2z"/></svg>
+            מס רווחי הון — 25%
+          </div>
+          <div class="calc-tax-body">
+            <div class="calc-tax-cell">
+              <span class="calc-tax-lbl">מס לתשלום (25%)</span>
+              <span class="calc-tax-val tax" id="cc-tax">—</span>
+            </div>
+            <div class="calc-tax-cell">
+              <span class="calc-tax-lbl">רווח נטו אחרי מס</span>
+              <span class="calc-tax-val net" id="cc-net">—</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1128,10 +1154,15 @@ function calcCompound(){
   }
   const invested=init+monthly*n;
   const profit=total-invested;
+  const tax=profit*0.25;
+  const net=profit-tax;
   const fmt=v=>'₪'+Math.round(v).toLocaleString('he-IL');
   document.getElementById('cc-invested').textContent=fmt(invested);
   document.getElementById('cc-total').textContent=fmt(total);
   document.getElementById('cc-profit').textContent=fmt(profit);
+  document.getElementById('cc-tax').textContent=fmt(tax);
+  document.getElementById('cc-net').textContent=fmt(net);
+  document.getElementById('cc-tax-box').style.display=profit>0?'block':'none';
 }
 
 // ── TOAST ──
